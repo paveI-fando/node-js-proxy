@@ -1,0 +1,39 @@
+const http = require('http'),
+    connect = require('connect'),
+    httpProxy = require('http-proxy');
+
+
+let selects = [];
+var simpleselect = {};
+
+simpleselect.query = '.b';
+simpleselect.func = function (node) {
+    node.createWriteStream().end('<div>+ Trumpet</div>');
+};
+
+selects.push(simpleselect);
+
+//
+// Basic Connect App
+//
+var app = connect();
+
+var proxy = httpProxy.createProxyServer({
+    target: 'http://localhost:8080'
+});
+
+//Additional true parameter can be used to ignore js and css files.
+//app.use(require('../')([], selects, true));
+
+// app.use(require('../')([], selects));
+
+app.use(function (req, res) {
+    proxy.web(req, res);
+});
+
+
+http.createServer(function (req, res) {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write('<html><head></head><body><div class="a">Nodejitsu Http Proxy</div><div class="b">&amp; Frames</div></body></html>');
+    res.end();
+}).listen(9000);
