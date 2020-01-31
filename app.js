@@ -1,39 +1,32 @@
-const http = require('http'),
-    connect = require('connect'),
-    httpProxy = require('http-proxy');
+var http = require('http');
+var httpProxy = require('http-proxy');
+var modifyResponse = require('http-proxy-response-rewrite');
 
-
-let selects = [];
-var simpleselect = {};
-
-simpleselect.query = '.b';
-simpleselect.func = function (node) {
-    node.createWriteStream().end('<div>+ Trumpet</div>');
-};
-
-selects.push(simpleselect);
-
-//
-// Basic Connect App
-//
-var app = connect();
-
+// Create a proxy server
 var proxy = httpProxy.createProxyServer({
-    target: 'http://localhost:8080'
+    target: 'http://localhost:8080/'
 });
 
-//Additional true parameter can be used to ignore js and css files.
-//app.use(require('../')([], selects, true));
+// Listen for the `proxyRes` event on `proxy`.
+proxy.on('proxyRes', function (proxyRes, req, res) {
+    modifyResponse(res, proxyRes.headers['content-encoding'], function (body) {
+        console.log(body);
+        console.log(typeof body);
+        const b ="<button>ZHOPA</button>";
+        let index = body.indexOf("<div id=\"swagger-editor\"></div>");
+        let body1 = body.slice(0, index) + b + body.slice(index);
+        console.log(body1);
+        return body1;
+    });
+});
 
-// app.use(require('../')([], selects));
-
-app.use(function (req, res) {
+// Create your server and then proxies the request
+var server = http.createServer(function (req, res) {
     proxy.web(req, res);
-});
-
-
-http.createServer(function (req, res) {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write('<html><head></head><body><div class="a">Nodejitsu Http Proxy</div><div class="b">&amp; Frames</div></body></html>');
-    res.end();
-}).listen(9000);
+}).listen(5000);
+// // Create your target server
+// var targetServer = http.createServer(function (req, res) {
+//     res.writeHead(200, {'Content-Type': 'application/json'});
+//     res.write(JSON.stringify({name: 'http-proxy-json', age: 1, version: '1.0.0'}));
+//     res.end();
+// }).listen(5001);
