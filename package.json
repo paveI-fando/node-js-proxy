@@ -10,7 +10,6 @@
     "simple-git": "^1.131.0"
   },
   "devDependencies": {
-    "colors": "^1.4.0",
     "start-server-and-test": "^1.10.6"
   }
 }
