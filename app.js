@@ -24,10 +24,12 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
 
 
 var server = http.createServer(function (req, res) {
-    let body = "";
     switch (req.url) {
         case "/commit":
-            req.on('data', (msg) => console.log(msg.toString()));
+            req.on('data', function (msg) {
+                const formData = JSON.parse(msg);
+                commitCommand(formData['commit-msg']);
+            });
             res.statusCode = 200;
             res.end("200");
             break;
@@ -36,14 +38,19 @@ var server = http.createServer(function (req, res) {
             res.end();
             break;
         case "/branch":
-            res.write(JSON.stringify({name: 'BRANCH ZHOPA', age: 1, version: '0000'}));
-            res.end();
+            req.on('data', function (msg) {
+                const formData = JSON.parse(msg);
+                console.log(formData);
+                branchCommand(formData['branch-name']);
+            });
+            res.statusCode = 200;
+            res.end("200");
             break;
         case "/swagger-editor/test.js":
             res.write(fs.readFileSync("./test.js"));
             res.end();
             break;
-            case "/swagger-editor/test.css":
+        case "/swagger-editor/test.css":
             res.write(fs.readFileSync("./test.css"));
             res.end();
             break;
