@@ -2,11 +2,15 @@ const htmlString = `
 <div class="popup-wrapper" id="branch-form-wrapper">
     <div id="popup-branch" class="form-container">
         <form action="/branch" id="form-branch" class="popup-form" method="post" name="form">
-            <h2>Contact Us</h2>
+            <h2>New branch</h2>
             <hr>
-            <input required id="branch-name-input" name="branch-name" placeholder="Branch name" type="text"/>
-            <button type="submit" class="submit-btn">Send</input>
-            <button type="reset" onclick="hideDiv('#branch-form-wrapper')" class="cancel-btn">Cancel</button>
+            <select id="select-checkout-from" name="branch-from">
+            </select>
+            <input required id="branch-name-input" name="branch-name" placeholder="Branch name" type="text"/> 
+            <div class="form-button-box">
+                <button type="submit" class="submit-btn">Send</input>
+                <button type="reset" onclick="hideDiv('#branch-form-wrapper')" class="cancel-btn">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
@@ -16,30 +20,37 @@ const htmlString = `
             <h2>Contact Us</h2>
             <hr>
             <input required id="commit-msg-input" name="commit-msg" placeholder="Commit message" type="text"/>
-            <button type="submit" class="submit-btn">Send</button>
-            <button onclick="hideDiv('#commit-form-wrapper')" class="cancel-btn">Cancel</button>
+            <div class="form-button-box">
+                <button type="submit" class="submit-btn">Send</button>
+                <button onclick="hideDiv('#commit-form-wrapper')" class="cancel-btn">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
-<div class="popup-wrapper" id="push-form-wrapper">
+<div class="popup-wrapper" id="checkout-form-wrapper">
     <div id="popup-push" class="form-container">
-        <form action="/push" id="form-push" class="popup-form" method="post" name="form">
-            <h2>Contact Us</h2>
+        <form action="/checkout" id="form-checkout" class="popup-form" method="post" name="form">
+            <h2>Checkout</h2>
             <hr>
-            <input required id="commit-msg-input" name="commit-msg" placeholder="BranchName" type="text"/>
-            <button type="submit" class="submit-btn">Send</button>
-            <button onclick="hideDiv('#push-form-wrapper')" class="cancel-btn">Cancel</button>
+             <select id="select-branch-for-checkout" name="branch-from">
+            </select>
+            <div class="form-button-box">
+                <button type="submit" class="submit-btn">Send</button>
+                <button onclick="hideDiv('#checkout-form-wrapper')" class="cancel-btn">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
 <div class="popup-wrapper" >
     <div id="popup-login" class="form-container">
         <form action="/login" id="form-login" class="popup-form" method="post" name="form">
-            <h2>Contact Us</h2>
+            <h2>Login</h2>>
             <hr>
             <input required id="commit-msg-input" name="commit-msg" placeholder="BranchName" type="text"/>
-            <button type="submit" class="submit-btn">Send</button>
-            <button onclick="hideDiv()" class="cancel-btn">Cancel</button>
+            <div class="form-button-box">
+                <button type="submit" class="submit-btn">Send</button>
+                <button onclick="hideDiv()" class="cancel-btn">Cancel</button>
+            </div>    
         </form>
     </div>
 </div>`;
@@ -52,7 +63,9 @@ $(document).ready(function () {
     buttonBox.setAttribute('id', 'specific-button-container');
     buttonBox.innerHTML = `<button id="new-branch-btn" class="specific-button">New Branch</button>
                            <button id="commit-btn" class="specific-button">Commit</button>
-                           <button id="push-btn" class="specific-button">Push</button>`;
+                           <button id="push-btn" class="specific-button">Push</button>
+                           <button id="checkout-btn" class="specific-button">Checkout</button>`;
+
     $('body').append(htmlString);
     el.parentNode.insertBefore(wrapper, el);
     wrapper.appendChild(buttonBox);
@@ -62,9 +75,49 @@ $(document).ready(function () {
 });
 
 function addOnClickEvents() {
-    $('#new-branch-btn').click(() => showDiv('#branch-form-wrapper'));
+    $('#new-branch-btn').click(() => {
+        getAllBranches('#select-checkout-from');
+        showDiv('#branch-form-wrapper')
+    });
     $('#commit-btn').click(() => showDiv('#commit-form-wrapper'));
-    $('#push-btn').click(() => showDiv('#push-form-wrapper'));
+    $('#checkout-btn').click(() => {
+        getAllBranches('#select-branch-for-checkout');
+        showDiv('#checkout-form-wrapper')
+    });
+
+}
+
+function getAllBranches(selector) {
+    $.ajax({
+        url: `${window.location.protocol}//${window.location.host}/allBranches`,
+        type: "GET",
+        dataType: 'json',
+        success: function (res) {
+            console.log(res);
+            res['all'].forEach((el) => {
+                $(selector).append(`<option>${el}</option>>`)
+            });
+            alert("DONE")
+        },
+        error: function () {
+            alert("SUCKS")
+        }
+    });
+}
+
+function pushChanges(selector) {
+    $.ajax({
+        url: `${window.location.protocol}//${window.location.host}/push`,
+        type: "POST",
+        dataType: 'json',
+        success: function (res) {
+            console.log(res);
+            alert("DONE")
+        },
+        error: function () {
+            alert("SUCKS")
+        }
+    });
 }
 
 function showDiv(selector) {
@@ -83,19 +136,18 @@ function addFormSubmitEvent() {
         const url = $(this).attr("action");
         const requestMethod = $(this).attr("method");
         const formDataArray = $(this).serializeArray();
+        console.log($(this).serialize());
         let obj = {};
         $.map(formDataArray, function (k, v) {
             obj[k['name']] = k['value'];
         });
-        console.log(obj);
         $.ajax({
             url: `${window.location.protocol}//${window.location.host}${url}`,
             type: requestMethod,
             data: JSON.stringify(obj),
-            dataType: 'json',
             contentType: 'application/json',
             success: function () {
-                alert("DONE")
+
             },
             error: function () {
                 alert("SUCKS")
