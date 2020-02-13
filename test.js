@@ -127,7 +127,7 @@ function pushChanges() {
     $.ajax({
         url: `${window.location.protocol}//${window.location.host}/push`,
         type: "POST",
-        dataType: 'json',
+        dataType: 'text',
         success: function () {
             alert("DONE")
         },

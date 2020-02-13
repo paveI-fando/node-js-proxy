@@ -35,7 +35,6 @@ const server = http.createServer(function (req, res) {
                 res.statusCode = 200;
                 res.end();
             }).catch((reason => {
-                console.log(reason);
                 deleteRemote(REMOTE_URL_VAR);
                 res.write(reason.toString());
                 res.statusCode = 500;
