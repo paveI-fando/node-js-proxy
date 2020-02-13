@@ -5,8 +5,21 @@ exports.commitCommand = function (msg) {
     return git().commit(msg, 'test.txt');
 };
 
-exports.pushCommand = function () {
-    return gitP().push('https://github.com/mobilemoneyapi/specification.git')
+exports.pushCommand = function (remoteName) {
+    return gitP().raw(['push', remoteName])
+};
+
+exports.getRemotes = function () {
+    return gitP().getRemotes(false)
+};
+
+exports.addRemote = function (remoteName, username, password) {
+    console.log(`https://${username}:${password}@github.com/paveI-fando/node-js-proxy.git`);
+    return gitP().addRemote(remoteName, `https://${username}:${password}@github.com/paveI-fando/node-js-proxy.git`)
+};
+
+exports.deleteRemote = function (remoteName) {
+    git().removeRemote(remoteName);
 };
 
 exports.checkoutCommand = function (branchName) {
@@ -21,7 +34,7 @@ exports.allBranches = function () {
 };
 
 exports.branchCommand = function (checkoutFrom, branchName) {
-    gitP().checkout(checkoutFrom).then(git().checkout(branchName));
+    gitP().checkout(checkoutFrom).then(gitP().checkout(branchName));
 };
 
 exports.addScripts = function () {

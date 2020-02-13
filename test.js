@@ -22,7 +22,7 @@ const htmlString = `
             <input required id="commit-msg-input" name="commit-msg" placeholder="Commit message" type="text"/>
             <div class="form-button-box">
                 <button type="submit" class="submit-btn">Send</button>
-                <button onclick="hideDiv('#commit-form-wrapper')" class="cancel-btn">Cancel</button>
+                <button type="reset" onclick="hideDiv('#commit-form-wrapper')" class="cancel-btn">Cancel</button>
             </div>
         </form>
     </div>
@@ -36,20 +36,21 @@ const htmlString = `
             </select>
             <div class="form-button-box">
                 <button type="submit" class="submit-btn">Send</button>
-                <button onclick="hideDiv('#checkout-form-wrapper')" class="cancel-btn">Cancel</button>
+                <button type="reset" onclick="hideDiv('#checkout-form-wrapper')" class="cancel-btn">Cancel</button>
             </div>
         </form>
     </div>
 </div>
-<div class="popup-wrapper" >
+<div class="popup-wrapper" id="login-form-wrapper">
     <div id="popup-login" class="form-container">
         <form action="/login" id="form-login" class="popup-form" method="post" name="form">
             <h2>Login</h2>>
             <hr>
-            <input required id="commit-msg-input" name="commit-msg" placeholder="BranchName" type="text"/>
+            <input required id="username-input" name="username" placeholder="username" type="text"/>
+            <input required id="password-commit-msg-input" name="password" placeholder="password" type="password"/>
             <div class="form-button-box">
                 <button type="submit" class="submit-btn">Send</button>
-                <button onclick="hideDiv()" class="cancel-btn">Cancel</button>
+                <button type="reset" onclick="hideDiv('#login-form-wrapper')" class="cancel-btn">Cancel</button>
             </div>    
         </form>
     </div>
@@ -79,6 +80,7 @@ function addOnClickEvents() {
         getAllBranches('#select-checkout-from');
         showDiv('#branch-form-wrapper')
     });
+    $('#push-btn').click(() => checkRemotes());
     $('#commit-btn').click(() => showDiv('#commit-form-wrapper'));
     $('#checkout-btn').click(() => {
         getAllBranches('#select-branch-for-checkout');
@@ -105,16 +107,32 @@ function getAllBranches(selector) {
     });
 }
 
-function pushChanges(selector) {
+function checkRemotes() {
+    $.ajax({
+        url: `${window.location.protocol}//${window.location.host}/remotes`,
+        type: "GET",
+        dataType: 'json',
+        success: function (res) {
+            console.log(res);
+            res.isRemoteDefined ? pushChanges() : showDiv('#login-form-wrapper');
+            console.log("DONE")
+        },
+        error: function () {
+            alert("SUCKS")
+        }
+    });
+}
+
+function pushChanges() {
     $.ajax({
         url: `${window.location.protocol}//${window.location.host}/push`,
         type: "POST",
         dataType: 'json',
-        success: function (res) {
-            console.log(res);
+        success: function () {
             alert("DONE")
         },
-        error: function () {
+        error: function (res) {
+            console.log(res.responseText);
             alert("SUCKS")
         }
     });

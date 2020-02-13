@@ -1,11 +1,12 @@
 const http = require('http');
 const httpProxy = require('http-proxy');
 const modifyResponse = require('http-proxy-response-rewrite');
-const {commitCommand, pushCommand, branchCommand, addScripts, addStyles, allBranches, checkoutCommand} = require('./git-helper');
+const {commitCommand, pushCommand, branchCommand, addScripts, addStyles, allBranches, checkoutCommand, getRemotes, addRemote, deleteRemote} = require('./git-helper');
 const fs = require('fs');
+const REMOTE_URL_VAR = 'swagger_editor_remote';
 
 
-var proxy = httpProxy.createProxyServer({
+const proxy = httpProxy.createProxyServer({
     target: 'http://localhost:8080/'
 });
 
@@ -19,8 +20,7 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
     );
 });
 
-
-var server = http.createServer(function (req, res) {
+const server = http.createServer(function (req, res) {
     switch (req.url) {
         case "/commit":
             req.on('data', function (msg) {
@@ -31,11 +31,24 @@ var server = http.createServer(function (req, res) {
             res.end();
             break;
         case "/push":
-            pushCommand().then(() => {
+            pushCommand(REMOTE_URL_VAR).then(() => {
                 res.statusCode = 200;
                 res.end();
             }).catch((reason => {
-                res.write(reason);
+                console.log(reason);
+                deleteRemote(REMOTE_URL_VAR);
+                res.write(reason.toString());
+                res.statusCode = 500;
+                res.end();
+            }));
+            break;
+        case "/remotes":
+            getRemotes().then((rm) => {
+                res.write(checkRemotes(rm));
+                res.statusCode = 200;
+                res.end()
+            }).catch((reason => {
+                res.write(reason.toString());
                 res.statusCode = 500;
                 res.end();
             }));
@@ -47,7 +60,7 @@ var server = http.createServer(function (req, res) {
                     res.statusCode = 200;
                     res.end();
                 }).catch((reason => {
-                    res.write(reason);
+                    res.write(reason.toString());
                     res.statusCode = 500;
                     res.end();
                 }));
@@ -72,6 +85,19 @@ var server = http.createServer(function (req, res) {
                 res.end();
             }));
             break;
+        case "/login":
+            req.on('data', function (msg) {
+                const formData = JSON.parse(msg);
+                addRemote(REMOTE_URL_VAR, formData['username'], formData['password']).then(() => {
+                    res.statusCode = 200;
+                    res.end()
+                }).catch((reason) => {
+                    res.write(reason.toString());
+                    res.statusCode = 500;
+                    res.end()
+                })
+            });
+            break;
         case "/swagger-editor/test.js":
             res.write(fs.readFileSync("./test.js"));
             res.end();
@@ -86,3 +112,7 @@ var server = http.createServer(function (req, res) {
     }
     console.log(req.url);
 }).listen(5000);
+
+function checkRemotes(remotes) {
+    return JSON.stringify({isRemoteDefined: remotes.filter((rm) => rm.name === REMOTE_URL_VAR).length > 0})
+}
