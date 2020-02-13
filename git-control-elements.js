@@ -17,7 +17,7 @@ const htmlString = `
 <div class="popup-wrapper" id="commit-form-wrapper">
     <div id="popup-commit" class="form-container">
         <form action="/commit" id="form-commit" class="popup-form" method="post" name="form">
-            <h2>Contact Us</h2>
+            <h2>Commit</h2>
             <hr>
             <input required id="commit-msg-input" name="commit-msg" placeholder="Commit message" type="text"/>
             <div class="form-button-box">
@@ -32,8 +32,7 @@ const htmlString = `
         <form action="/checkout" id="form-checkout" class="popup-form" method="post" name="form">
             <h2>Checkout</h2>
             <hr>
-             <select id="select-branch-for-checkout" name="branch-from">
-            </select>
+            <select id="select-branch-for-checkout" name="branch-name"></select>
             <div class="form-button-box">
                 <button type="submit" class="submit-btn">Send</button>
                 <button type="reset" onclick="hideDiv('#checkout-form-wrapper')" class="cancel-btn">Cancel</button>
@@ -54,6 +53,9 @@ const htmlString = `
             </div>    
         </form>
     </div>
+</div>
+<div id="error-message-container">
+    <span id="error-text"></span>
 </div>`;
 
 $(document).ready(function () {
@@ -95,14 +97,12 @@ function getAllBranches(selector) {
         type: "GET",
         dataType: 'json',
         success: function (res) {
-            console.log(res);
             res['all'].forEach((el) => {
                 $(selector).append(`<option>${el}</option>>`)
             });
-            alert("DONE")
         },
-        error: function () {
-            alert("SUCKS")
+        error: function (res) {
+            showError(res.responseText);
         }
     });
 }
@@ -113,12 +113,10 @@ function checkRemotes() {
         type: "GET",
         dataType: 'json',
         success: function (res) {
-            console.log(res);
             res.isRemoteDefined ? pushChanges() : showDiv('#login-form-wrapper');
-            console.log("DONE")
         },
-        error: function () {
-            alert("SUCKS")
+        error: function (res) {
+            showError(res.responseText)
         }
     });
 }
@@ -129,32 +127,32 @@ function pushChanges() {
         type: "POST",
         dataType: 'text',
         success: function () {
-            alert("DONE")
+            location.reload();
         },
         error: function (res) {
-            console.log(res.responseText);
-            alert("SUCKS")
+            showError(res.responseText)
         }
     });
 }
 
 function showDiv(selector) {
-    $(selector).css('display', 'block');
+    $(selector).css('display', 'flex');
     $('#page-container').css('opacity', '0.5');
 }
 
 function hideDiv(selector) {
     $(selector).css('display', 'none');
     $('#page-container').css('opacity', '1');
+    hideError();
 }
 
 function addFormSubmitEvent() {
     $('.popup-form').submit(function (e) {
         e.preventDefault();
-        const url = $(this).attr("action");
-        const requestMethod = $(this).attr("method");
+        hideError();
+        const url = $(this).attr('action');
+        const requestMethod = $(this).attr('method');
         const formDataArray = $(this).serializeArray();
-        console.log($(this).serialize());
         let obj = {};
         $.map(formDataArray, function (k, v) {
             obj[k['name']] = k['value'];
@@ -165,12 +163,20 @@ function addFormSubmitEvent() {
             data: JSON.stringify(obj),
             contentType: 'application/json',
             success: function () {
-
+                location.reload();
             },
-            error: function () {
-                alert("SUCKS")
-            }
+            error: function (res) {
+                showError(res.responseText)
+            },
         });
-    })
+    });
+}
 
+function showError(errorText) {
+    $('#error-text').text(errorText);
+    $('#error-message-container').css('display', 'block')
+}
+
+function hideError() {
+    $('#error-message-container').css('display', 'none')
 }

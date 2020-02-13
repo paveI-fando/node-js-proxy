@@ -27,28 +27,28 @@ const server = http.createServer(function (req, res) {
                 const formData = JSON.parse(msg);
                 commitCommand(formData['commit-msg']);
             });
-            res.statusCode = 200;
+            res.writeHead(200);
             res.end();
             break;
         case "/push":
             pushCommand(REMOTE_URL_VAR).then(() => {
-                res.statusCode = 200;
+                res.writeHead(200);
                 res.end();
             }).catch((reason => {
                 deleteRemote(REMOTE_URL_VAR);
+                res.writeHead(500);
                 res.write(reason.toString());
-                res.statusCode = 500;
                 res.end();
             }));
             break;
         case "/remotes":
             getRemotes().then((rm) => {
+                res.writeHead(200);
                 res.write(checkRemotes(rm));
-                res.statusCode = 200;
                 res.end()
             }).catch((reason => {
+                res.writeHead(500);
                 res.write(reason.toString());
-                res.statusCode = 500;
                 res.end();
             }));
             break;
@@ -56,31 +56,38 @@ const server = http.createServer(function (req, res) {
             req.on('data', function (msg) {
                 const formData = JSON.parse(msg);
                 checkoutCommand(formData['branch-name']).then(() => {
-                    res.statusCode = 200;
+                    res.writeHead(200);
                     res.end();
                 }).catch((reason => {
+                    res.writeHead(500);
                     res.write(reason.toString());
-                    res.statusCode = 500;
                     res.end();
                 }));
             });
+
             break;
         case "/branch":
             req.on('data', function (msg) {
                 const formData = JSON.parse(msg);
-                branchCommand(formData['branch-from'], formData['branch-name'])
+                branchCommand(formData['branch-from'], formData['branch-name']).then((result) => {
+                    res.writeHead(200);
+                    res.write(result.toString());
+                    res.end();
+                }).catch((reason) => {
+                    res.writeHead(500);
+                    res.write(reason.toString());
+                    res.end();
+                });
             });
-            res.statusCode = 200;
-            res.end();
             break;
         case "/allBranches":
             allBranches().then((br) => {
+                res.writeHead(200);
                 res.write(JSON.stringify(br));
-                res.statusCode = 200;
                 res.end();
             }).catch((reason => {
-                res.write(reason);
-                res.statusCode = 500;
+                res.writeHead(500);
+                res.write(reason.toString());
                 res.end();
             }));
             break;
@@ -88,28 +95,27 @@ const server = http.createServer(function (req, res) {
             req.on('data', function (msg) {
                 const formData = JSON.parse(msg);
                 addRemote(REMOTE_URL_VAR, formData['username'], formData['password']).then(() => {
-                    res.statusCode = 200;
+                    res.writeHead(200);
                     res.end()
                 }).catch((reason) => {
+                    res.writeHead(500);
                     res.write(reason.toString());
-                    res.statusCode = 500;
                     res.end()
                 })
             });
             break;
-        case "/swagger-editor/test.js":
-            res.write(fs.readFileSync("./test.js"));
+        case "/swagger-editor/git-control-elements.js":
+            res.write(fs.readFileSync("./git-control-elements.js"));
             res.end();
             break;
-        case "/swagger-editor/test.css":
-            res.write(fs.readFileSync("./test.css"));
+        case "/swagger-editor/git-control-elements.css":
+            res.write(fs.readFileSync("./git-control-elements.css"));
             res.end();
             break;
         default:
             proxy.web(req, res);
             break;
     }
-    console.log(req.url);
 }).listen(5000);
 
 function checkRemotes(remotes) {

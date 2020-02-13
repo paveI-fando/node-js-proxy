@@ -14,7 +14,6 @@ exports.getRemotes = function () {
 };
 
 exports.addRemote = function (remoteName, username, password) {
-    console.log(`https://${username}:${password}@github.com/paveI-fando/node-js-proxy.git`);
     return gitP().addRemote(remoteName, `https://${username}:${password}@github.com/paveI-fando/node-js-proxy.git`)
 };
 
@@ -27,21 +26,21 @@ exports.checkoutCommand = function (branchName) {
 };
 
 exports.allBranches = function () {
-    // return gitP().branch([]);
-    gitP().branch([]).then((br) => console.log(br));
     return gitP().branch([]);
 
 };
 
 exports.branchCommand = function (checkoutFrom, branchName) {
-    gitP().checkout(checkoutFrom).then(gitP().checkout(branchName));
+    return gitP().checkout(checkoutFrom).then(() => gitP().branch(branchName)).catch((reason => {
+        throw new Error(reason.toString());
+    }));
 };
 
 exports.addScripts = function () {
     return `<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-            <script src="./test.js"></script>`
+            <script src="git-control-elements.js"></script>`
 };
 
 exports.addStyles = function () {
-    return `<link rel="stylesheet" type="text/css" href="./test.css">`
+    return `<link rel="stylesheet" type="text/css" href="git-control-elements.css">`
 };
