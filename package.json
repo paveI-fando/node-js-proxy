@@ -4,7 +4,7 @@
   "dependencies": {
     "formidable": "^1.2.1",
     "harmon": "^1.4.3",
-    "http-proxy": "1.18.0",
+    "http-proxy": "1.18.1",
     "http-proxy-response-rewrite": "0.0.1",
     "simple-git": "^1.131.0"
   }
